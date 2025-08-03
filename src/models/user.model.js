@@ -12,7 +12,7 @@ const userSchema = new mongoose.Schema(
     gender: {
       type: String,
       enum: {
-        values: ["male", "Female", "Others"],
+        values: ["male", "female", "Others"],
         message: "Invalid gender",
       },
     },
@@ -21,9 +21,12 @@ const userSchema = new mongoose.Schema(
       min: "1900-01-01",
       max: Date.now(),
     },
+    username: {
+      type: String,
+      trim: true,
+    },
     email: {
       type: String,
-      required: true,
       unique: true,
       lowercase: true,
     },
