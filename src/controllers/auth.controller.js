@@ -9,7 +9,7 @@ export const registerUser = asyncHandler(async (req, res, next) => {
   if ([fullName, gender, dob, password].some((field) => !field)) {
     return res
       .status(400)
-      .json(new ApiError(400, "Requierd fields are missing"));
+      .json(new ApiError(400, "Required fields are missing"));
   }
 
   // Check if user already exists.
@@ -30,9 +30,64 @@ export const registerUser = asyncHandler(async (req, res, next) => {
     password: password,
   });
 
-  await newUser.save();
+  const newSavedUser = await newUser.save();
+
+  const finalResponse = await User.findById(newSavedUser._id).select(
+    "-password -refreshToken"
+  );
 
   return res
     .status(201)
-    .json(new ApiResponse(201, newUser, "New user created successfully."));
+    .json(
+      new ApiResponse(201, finalResponse, "New user created successfully.")
+    );
+});
+
+export const loginUser = asyncHandler(async (req, res, next) => {
+  const { username, email, password } = req.body;
+
+  if ((!username && !password) || (!email && !password))
+    return res
+      .status(400)
+      .json(new ApiError(400, "Required fields are missing."));
+
+  let validUser;
+
+  if (username) {
+    validUser = await User.findOne({ username });
+  } else {
+    validUser = await User.findOne({ email });
+  }
+
+  if (!validUser)
+    return res.status(409).json(new ApiError(404, "User not found."));
+
+  const isPasswordCorrect = await validUser.isPasswordCorrect(password);
+
+  if (!isPasswordCorrect)
+    return res.status(401).json(new ApiError(401, "Incorrect Password."));
+
+  const accessToken = await validUser.generateAccessToken();
+  const refreshToken = await validUser.generateRefreshToken();
+
+  const options = {
+    httpOnly: true,
+    secure: true,
+  };
+
+  validUser.refreshToken = refreshToken;
+  await validUser.save();
+
+  res.cookie("accessToken", accessToken, options);
+  res.cookie("refreshToken", refreshToken, options);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { accessToken: accessToken },
+        "User logged in successfully"
+      )
+    );
 });
