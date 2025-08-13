@@ -35,6 +35,18 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, "password is required"],
     },
+    totalIncome: {
+      type: Number,
+      default: 0,
+    },
+    totalExpense: {
+      type: Number,
+      default: 0,
+    },
+    balance: {
+      type: Number,
+      default: 0,
+    },
     refreshToken: {
       type: String,
     },

@@ -14,8 +14,7 @@ const transactionSchema = new mongoose.Schema(
     amount: {
       type: Double,
       default: 0,
-      min: [0, "amount cannot be less than zero"],
-      max: [100000, "amount cannot exceed 100000"],
+      min: [1, "amount cannot be less than 1"],
       required: true,
     },
     transactionType: {
