@@ -68,7 +68,8 @@ export const viewAllTransactions = asyncHandler(async (req, res, next) => {
   const limit = parseInt(req.query.limit) || 5;
 
   const pipeline = [
-    { $sort: { amount: 1 } }, // Sort by name ascending
+    { $match: { userId: userDetails._id } },
+    { $sort: { amount: -1 } }, // Sort by amount descending.
   ];
 
   const aggregate = Transaction.aggregate(pipeline);
