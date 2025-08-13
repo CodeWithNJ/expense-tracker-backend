@@ -12,7 +12,7 @@ const transactionSchema = new mongoose.Schema(
       trim: true,
     },
     amount: {
-      type: Double,
+      type: Number,
       default: 0,
       min: [1, "amount cannot be less than 1"],
       required: true,
