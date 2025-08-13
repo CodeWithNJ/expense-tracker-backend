@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongooseAggregate from "mongoose-aggregate-paginate-v2";
 
 const transactionSchema = new mongoose.Schema(
   {
@@ -27,6 +28,8 @@ const transactionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+transactionSchema.plugin(mongooseAggregate);
 
 const Transaction = mongoose.model("Transaction", transactionSchema);
 

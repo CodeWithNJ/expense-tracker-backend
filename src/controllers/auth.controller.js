@@ -12,10 +12,13 @@ export const registerUser = asyncHandler(async (req, res, next) => {
       .json(new ApiError(400, "Required fields are missing"));
   }
 
-  // Check if user already exists.
-  const existingUser = await User.findOne({
-    $or: [{ username: username }, { email: email }],
-  });
+  let existingUser;
+
+  if (username) {
+    existingUser = await User.findOne({ username });
+  } else {
+    existingUser = await User.findOne({ email });
+  }
 
   if (existingUser) {
     return res.status(409).json(new ApiError(409, "User already exists."));

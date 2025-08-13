@@ -56,3 +56,30 @@ export const createTransaction = asyncHandler(async (req, res, next) => {
       )
     );
 });
+
+export const viewAllTransactions = asyncHandler(async (req, res, next) => {
+  const userDetails = await User.findById(req.user?._id);
+
+  if (!userDetails) {
+    return res.status(404).json(new ApiError(404, "User not found."));
+  }
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 5;
+
+  const pipeline = [
+    { $sort: { amount: 1 } }, // Sort by name ascending
+  ];
+
+  const aggregate = Transaction.aggregate(pipeline);
+
+  const options = { page, limit };
+
+  const results = await Transaction.aggregatePaginate(aggregate, options);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, results, "Fetched all transactions successfully.")
+    );
+});
