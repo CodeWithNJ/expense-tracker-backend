@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import mongooseAggregate from "mongoose-aggregate-paginate-v2";
 
 const transactionSchema = new mongoose.Schema(
   {
@@ -12,10 +13,9 @@ const transactionSchema = new mongoose.Schema(
       trim: true,
     },
     amount: {
-      type: Double,
+      type: Number,
       default: 0,
-      min: [0, "amount cannot be less than zero"],
-      max: [100000, "amount cannot exceed 100000"],
+      min: [1, "amount cannot be less than 1"],
       required: true,
     },
     transactionType: {
@@ -28,6 +28,8 @@ const transactionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+transactionSchema.plugin(mongooseAggregate);
 
 const Transaction = mongoose.model("Transaction", transactionSchema);
 

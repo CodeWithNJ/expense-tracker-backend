@@ -12,10 +12,13 @@ export const registerUser = asyncHandler(async (req, res, next) => {
       .json(new ApiError(400, "Required fields are missing"));
   }
 
-  // Check if user already exists.
-  const existingUser = await User.findOne({
-    $or: [{ username: username }, { email: email }],
-  });
+  let existingUser;
+
+  if (username) {
+    existingUser = await User.findOne({ username });
+  } else {
+    existingUser = await User.findOne({ email });
+  }
 
   if (existingUser) {
     return res.status(409).json(new ApiError(409, "User already exists."));
@@ -60,7 +63,7 @@ export const loginUser = asyncHandler(async (req, res, next) => {
   }
 
   if (!validUser)
-    return res.status(409).json(new ApiError(404, "User not found."));
+    return res.status(404).json(new ApiError(404, "User not found."));
 
   const isPasswordCorrect = await validUser.isPasswordCorrect(password);
 
@@ -90,4 +93,10 @@ export const loginUser = asyncHandler(async (req, res, next) => {
         "User logged in successfully"
       )
     );
+});
+
+export const checkUserAuthenticated = asyncHandler(async (req, res, next) => {
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "User is authenticated"));
 });

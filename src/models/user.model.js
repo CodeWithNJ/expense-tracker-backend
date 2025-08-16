@@ -23,17 +23,29 @@ const userSchema = new mongoose.Schema(
     },
     username: {
       type: String,
-      unique: true,
       trim: true,
+      lowercase: true,
     },
     email: {
       type: String,
-      unique: true,
+      trim: true,
       lowercase: true,
     },
     password: {
       type: String,
       required: [true, "password is required"],
+    },
+    totalIncome: {
+      type: Number,
+      default: 0,
+    },
+    totalExpense: {
+      type: Number,
+      default: 0,
+    },
+    balance: {
+      type: Number,
+      default: 0,
     },
     refreshToken: {
       type: String,
