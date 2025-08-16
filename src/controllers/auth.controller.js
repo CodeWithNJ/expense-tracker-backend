@@ -63,7 +63,7 @@ export const loginUser = asyncHandler(async (req, res, next) => {
   }
 
   if (!validUser)
-    return res.status(409).json(new ApiError(404, "User not found."));
+    return res.status(404).json(new ApiError(404, "User not found."));
 
   const isPasswordCorrect = await validUser.isPasswordCorrect(password);
 
@@ -93,4 +93,10 @@ export const loginUser = asyncHandler(async (req, res, next) => {
         "User logged in successfully"
       )
     );
+});
+
+export const checkUserAuthenticated = asyncHandler(async (req, res, next) => {
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "User is authenticated"));
 });
