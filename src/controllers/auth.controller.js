@@ -26,7 +26,7 @@ export const registerUser = asyncHandler(async (req, res, next) => {
 
   const newUser = await User.create({
     fullName: fullName,
-    gender: gender,
+    gender: gender.toLowerCase(),
     dob: dob,
     email: email ? email : null,
     username: username ? username : null,
