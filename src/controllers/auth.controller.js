@@ -100,3 +100,20 @@ export const checkUserAuthenticated = asyncHandler(async (req, res, next) => {
     .status(200)
     .json(new ApiResponse(200, null, "User is authenticated"));
 });
+
+export const getUserDetails = asyncHandler(async (req, res, next) => {
+  // Fetch user details (_id) using JWT token (auth middleware)
+  const userId = req.user?._id;
+  const userDetails = await User.findById(userId).select(
+    "-password -refreshToken"
+  );
+  if (!userDetails) {
+    return res.status(404).json(new ApiError(404, "User not found"));
+  } else {
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, userDetails, "User details fetched successfully")
+      );
+  }
+});
