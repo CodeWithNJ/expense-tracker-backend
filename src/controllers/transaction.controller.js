@@ -36,11 +36,11 @@ export const createTransaction = asyncHandler(async (req, res, next) => {
   });
 
   if (lowerCaseTransactionType === "income") {
-    userDetails.totalIncome += amount;
-    userDetails.balance += amount;
+    userDetails.totalIncome += Number(amount);
+    userDetails.balance += Number(amount);
   } else {
-    userDetails.totalExpense += amount;
-    userDetails.balance -= amount;
+    userDetails.totalExpense += Number(amount);
+    userDetails.balance -= Number(amount);
   }
 
   const savedTransaction = await newTransaction.save();
