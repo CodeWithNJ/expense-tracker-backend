@@ -145,3 +145,32 @@ export const updateTransaction = asyncHandler(async (req, res, next) => {
       new ApiResponse(200, transaction, "Transaction updated successfully.")
     );
 });
+
+export const deleteTransaction = asyncHandler(async (req, res, next) => {
+  const transactionId = req.params.id;
+
+  // Find transaction and user
+  const transaction = await Transaction.findById(transactionId);
+  if (!transaction) {
+    return res.status(404).json(new ApiError(404, "Transaction not found."));
+  }
+
+  const user = await User.findById(transaction.userId);
+
+  if (transaction.transactionType === "income") {
+    user.totalIncome -= transaction.amount;
+    user.balance -= transaction.amount;
+  } else {
+    user.totalExpense -= transaction.amount;
+    user.balance += transaction.amount;
+  }
+
+  await Transaction.findByIdAndDelete(transactionId);
+  await user.save();
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, transaction, "Transaction deleted successfully.")
+    );
+});
