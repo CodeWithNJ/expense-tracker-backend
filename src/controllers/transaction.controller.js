@@ -89,100 +89,59 @@ export const updateTransaction = asyncHandler(async (req, res, next) => {
   const transactionId = req.params.id;
   const { title, amount, transactionType } = req.body;
 
-  const validTransaction = await Transaction.findById(transactionId);
-
-  if (!validTransaction) {
+  // Find transaction and user
+  const transaction = await Transaction.findById(transactionId);
+  if (!transaction) {
     return res.status(404).json(new ApiError(404, "Transaction not found."));
   }
 
-  const userDetails = await User.findById(validTransaction.userId);
+  const user = await User.findById(transaction.userId);
 
-  // Update title if provided
-  if (title) validTransaction.title = title;
+  // Store original values
+  const originalAmount = transaction.amount;
+  const originalType = transaction.transactionType;
 
-  // Store original values for calculations
-  const originalAmount = validTransaction.amount;
-  const originalType = validTransaction.transactionType;
+  // Get new values (use original if not provided)
+  const newAmount = amount !== undefined ? amount : originalAmount;
+  const newType = transactionType
+    ? transactionType.toLowerCase()
+    : originalType;
 
-  // Determine if amount or type is changing
-  const isAmountChanging = amount && amount !== originalAmount;
-  const isTypeChanging =
-    transactionType &&
-    transactionType.toLowerCase() !== originalType.toLowerCase();
-
-  // Case 1: Both amount and transaction type are changing
-  if (isAmountChanging && isTypeChanging) {
-    if (transactionType.toLowerCase() === "income") {
-      // Changing from expense to income with new amount
-      userDetails.totalExpense -= originalAmount;
-      userDetails.balance += originalAmount; // Reverse old expense impact
-      userDetails.totalIncome += amount;
-      userDetails.balance += amount; // Apply new income impact
-    } else {
-      // Changing from income to expense with new amount
-      userDetails.totalIncome -= originalAmount;
-      userDetails.balance -= originalAmount; // Reverse old income impact
-      userDetails.totalExpense += amount;
-      userDetails.balance -= amount; // Apply new expense impact
-    }
-    validTransaction.amount = amount;
-    validTransaction.transactionType = transactionType;
-  }
-  // Case 2: Only transaction type is changing
-  else if (isTypeChanging && !isAmountChanging) {
-    if (transactionType.toLowerCase() === "income") {
-      // Changing from expense to income (same amount)
-      userDetails.totalExpense -= originalAmount;
-      userDetails.totalIncome += originalAmount;
-      userDetails.balance += 2 * originalAmount; // Reverse expense (-) and apply income (+)
-    } else {
-      // Changing from income to expense (same amount)
-      userDetails.totalIncome -= originalAmount;
-      userDetails.totalExpense += originalAmount;
-      userDetails.balance -= 2 * originalAmount; // Reverse income (+) and apply expense (-)
-    }
-    validTransaction.transactionType = transactionType;
-  }
-  // Case 3: Only amount is changing (type stays the same or not provided)
-  else if (isAmountChanging && !isTypeChanging) {
-    const currentType = transactionType
-      ? transactionType.toLowerCase()
-      : originalType.toLowerCase();
-
-    if (currentType === "income") {
-      userDetails.totalIncome -= originalAmount;
-      userDetails.balance -= originalAmount;
-      userDetails.totalIncome += amount;
-      userDetails.balance += amount;
-    } else {
-      userDetails.totalExpense -= originalAmount;
-      userDetails.balance += originalAmount; // Reverse old expense
-      userDetails.totalExpense += amount;
-      userDetails.balance -= amount; // Apply new expense
-    }
-    validTransaction.amount = amount;
-
-    // Update type if explicitly provided (even if same)
-    if (transactionType) {
-      validTransaction.transactionType = transactionType;
-    }
-  }
-  // Case 4: Transaction type provided but same as original, no amount change
-  else if (transactionType && !isTypeChanging && !isAmountChanging) {
-    // No financial updates needed, just update the field for consistency
-    validTransaction.transactionType = transactionType;
+  // Validate new transaction type
+  if (newType !== "income" && newType !== "expense") {
+    return res.status(400).json(new ApiError(400, "Invalid transactionType"));
   }
 
-  await validTransaction.save();
-  await userDetails.save();
+  // STEP 1: Reverse original transaction impact
+  if (originalType === "income") {
+    user.totalIncome -= originalAmount;
+    user.balance -= originalAmount;
+  } else {
+    user.totalExpense -= originalAmount;
+    user.balance += originalAmount; // Reverse expense (add back)
+  }
+
+  // STEP 2: Apply new transaction impact
+  if (newType === "income") {
+    user.totalIncome += newAmount;
+    user.balance += newAmount;
+  } else {
+    user.totalExpense += newAmount;
+    user.balance -= newAmount;
+  }
+
+  // STEP 3: Update transaction fields
+  if (title) transaction.title = title;
+  transaction.amount = newAmount;
+  transaction.transactionType = newType;
+
+  // Save changes
+  await transaction.save();
+  await user.save();
 
   return res
     .status(200)
     .json(
-      new ApiResponse(
-        200,
-        validTransaction,
-        "Transaction updated successfully."
-      )
+      new ApiResponse(200, transaction, "Transaction updated successfully.")
     );
 });
