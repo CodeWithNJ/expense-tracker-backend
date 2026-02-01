@@ -3,6 +3,7 @@ import {
   checkUserAuthenticated,
   getUserDetails,
   loginUser,
+  logoutUser,
   registerUser,
 } from "../controllers/auth.controller.js";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
@@ -13,5 +14,6 @@ authRouter.route("/register").post(registerUser);
 authRouter.route("/login").post(loginUser);
 authRouter.route("/check-auth").get(verifyJwt, checkUserAuthenticated);
 authRouter.route("/user-details").get(verifyJwt, getUserDetails);
+authRouter.route("/logout").get(verifyJwt, logoutUser);
 
 export default authRouter;
